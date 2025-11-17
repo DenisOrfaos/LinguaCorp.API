@@ -19,13 +19,26 @@ namespace LinguaCorp.API.Services
         }
 
         // Retrieve all phrases. 
-        public List<Phrase> GetAllPhrases() => _phrases;
+        public List<Phrase> GetAllPhrases()
+        {
+            if (_phrases == null)
+            {
+                throw new InvalidOperationException("Phrase data could not be retrieved.");
+            }
+            return _phrases;
+        }
 
         // Retrieve a phrase by ID
         // Validation of ID is handled in the controller for simplicity at this stage.        
         public Phrase GetPhraseById(int id)
         {
-            return _phrases.FirstOrDefault(p => p.Id == id);
+            var phrases =  _phrases.FirstOrDefault(p => p.Id == id);
+
+            if (phrases == null)
+            {
+                throw new KeyNotFoundException($"Phrase with ID {id} not found.");
+            }
+            return phrases;
         }
 
         // Adds a new phrase

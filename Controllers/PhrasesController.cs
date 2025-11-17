@@ -1,6 +1,7 @@
 ﻿using LinguaCorp.API.Models;
 using LinguaCorp.API.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 
 namespace LinguaCorp.API.Controllers
@@ -13,48 +14,88 @@ namespace LinguaCorp.API.Controllers
         private readonly IPhraseService _phraseService;
 
         // The service is automatically injected via dependency injection
-        public PhrasesController(IPhraseService phraseService)
+
+        //logging service dependency injection:      
+        private readonly ILogger<PhrasesController> _logger;
+
+        // Constructor:
+        public PhrasesController(ILogger<PhrasesController> logger, IPhraseService phraseService)
         {
+            _logger = logger;
             _phraseService = phraseService;
         }
 
 
-        //Get returns a list of all phrases.
+
+
+        /// <summary>
+        /// Retrieves all stored phrases.
+        /// </summary>
+        /// <returns>List of phrases or 204 if empty.</returns>
         [HttpGet]
         public IActionResult GetAllPhrases()
         {
 
-            var phrases = _phraseService.GetAllPhrases();
 
-
-            if (phrases.Count == 0)
+            try
             {
-                return NoContent();
+                var phrases = _phraseService.GetAllPhrases();
+
+                if (phrases.Count == 0)
+                {
+                    return NoContent();
+                }
+
+                return Ok(phrases);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving all phrases.");
+                return StatusCode(500, "An error occurred while retrieving phrases.");
             }
 
-            return Ok(phrases);
 
         }
 
-        //Get returns the phrase with the specified if. It is simplified for now, validation will be added later
+
+        /// <summary>
+        /// Retrieves a specific phrase by its unique identifier.
+        /// </summary>
+        /// <param name="id">Phrase ID</param>
+        /// <returns>Returns the phrase if found.</returns>
         [HttpGet("{id}")]
         public IActionResult GetPhraseById(int id)
         {
 
 
+            _logger.LogInformation("Request received to get phrase with ID {Id}", id);
+
+
             if (id <= 0)
             {
+                _logger.LogWarning("Invalid ID {Id} provided", id);
                 return BadRequest("ID must be a positive integer.");
             }
 
-            var phrase = _phraseService.GetPhraseById(id);
 
-            if (phrase == null)
+            try
             {
-                return NotFound($"Phrase with ID {id} not found.");
+                var phrase = _phraseService.GetPhraseById(id);
+
+                _logger.LogInformation("Phrase with ID {Id} retrieved successfully", id);
+                return Ok(phrase);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogWarning(ex.Message);
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving phrase with ID {Id}", id);
+                return StatusCode(500, "An error occurred while retrieving the phrase.");
             }
 
-            return Ok(phrase);
         }
 
 
