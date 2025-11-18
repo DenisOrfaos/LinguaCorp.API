@@ -45,7 +45,7 @@ namespace LinguaCorp.API.Services
         public Phrase CreatePhrase(Phrase phrase)
         {
             // Assign a new unique ID to the phrase
-            phrase.Id = _phrases.Any() ? _phrases.Max(p => p.Id) + 1 : 1;
+            phrase.Id = _phrases.Any() ? _phrases.Max(p => p.Id) + 1 : 1;   
 
             _phrases.Add(phrase);
 
